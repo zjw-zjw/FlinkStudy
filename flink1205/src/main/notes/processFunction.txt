@@ -1,0 +1,9 @@
+1. 普通的transform算子，只能获取到当前的数据，或者加上聚合状态
+如果是RichFunction，可以有生命周期方法，还可以获取运行时上下文，进行状态编程
+但是它们都不能获取时间戳和watermark的相关信息
+
+2. Process Function是唯一可以获取到时间相关信息的API
+RichFunction能做得，Process Function都能做
+可以获取到当前的timestamp 和 watermark
+可以注册定时器，指定某个时间点发生的操作
+还可以输出侧输出流

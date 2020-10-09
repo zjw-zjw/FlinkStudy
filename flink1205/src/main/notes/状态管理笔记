@@ -1,0 +1,16 @@
+1. 什么是状态？
+    状态是针对每个算子而言，在每个并行任务中用于计算结果的数据
+    可以看作是一个本地变量：一般放在本地内存；flink会统一进行数据类型的管理，方便进行读写的传输以及容错保证
+
+2. 状态分类
+    operator state: 针对当前任务输入的所有数据可见，当前任务输入的所有数据都可以访问同一份状态
+    keyed state：状态只针对当前key的数据可见，对每个key维护和管理一份状态实例
+
+3. flink的状态后端： 三种
+
+    1）内存级：MemorySateBackend
+    2）文件级: FsStateBackend
+    3）RocksDB: RocksDBSateBackend
+
+
+4. 使用keyed state，必须在keyBy之后的操作中（基于一个keyedStream）

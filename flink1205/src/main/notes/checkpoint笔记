@@ -1,0 +1,16 @@
+1. flink中的checkpoint保存的是所有任务 状态 的快照
+这个状态要求是所有任务都处理完同一个数据之后的状态
+
+2. flink checkpoint算法
+基于 Chandy-Lamport（昌迪兰波特） 算法的分布式快照
+
+3. flink checkpoint中重要的概念
+barrier用于分隔不同的checkpoint，对于每个任务而言，收到barrier就意味着要开始做state的保存了
+算法中需要对不同上游分区发来的barrier，进行对齐
+
+4. checkpoint存储位置，由state backend决定
+一般是放在远程持久化存储空间（fs, RocksDB）
+jobManager触发一个checkpoint操作，会把checkpoint中所有任务状态的拓扑结构保存下来
+
+5. barrier 和 watermark 类似，都可以看作一个插入数据流中的特殊数据结构
+barrier在数据处理上 跟 watermark 是两套机制，完全没有关系

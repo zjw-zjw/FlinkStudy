@@ -1,0 +1,18 @@
+1. Table API程序的主要结构
+    所有的操作基于Table
+    在环境里注册表，可以用connect方法连接到不同的外部系统，定义好format和schema
+    对于输入和输出的表，TableSource和TableSink，创建的时候不做区分，主要是后面的处理逻辑决定的
+
+2. 调table的insertInto() 方法，可以将一张表的数据写入TableSink
+
+3. 动态表 和 持续查询
+   这是流处理程序 转换成 表结构 的 核心概念
+
+4. 更新模式
+   Append（仅追加）
+   Retract: 撤回（ADD和Delete）
+   Upsert:  Upsert和Delete
+
+5. 时间语义
+   .proctime 处理时间
+   .rowtime  事件时间
