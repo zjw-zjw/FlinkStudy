@@ -1,0 +1,50 @@
+一、CEATE TABLE的DDL语句中的 timestamp 字段的坑
+
+如果字段类型定义为TIMESTAMP，那它的值应该为2020-04-06T16:26:11类似的格式。
+WATERMARK 定义了表的事件时间属性，其形式为 WATERMARK FOR rowtime_column_name AS watermark_strategy_expression 。 rowtime_column_name 把一个现有的列定义为一个为表标记事件时间的属性。该列的类型必须为 TIMESTAMP(3)，且是 schema 中的顶层列，它也可以是一个计算列。
+TIMESTAMP(3)是秒级时间戳 yyyy-MM-dd HH:mm:ss。
+
+
+二、FlinkSQL 分组窗口
+SQL 查询的分组窗口是通过 GROUP BY 子句定义的。类似于使用常规 GROUP BY 语句的查询，窗口分组语句的 GROUP BY 子句中带有一个窗口函数为每个分组计算出一个结果。以下是批处理表和流处理表支持的分组窗口函数：
+分组窗口函数
+描述
+TUMBLE(time_attr, interval)
+定义一个滚动窗口。滚动窗口把行分配到有固定持续时间（ interval ）的不重叠的连续窗口。比如，5 分钟的滚动窗口以 5 分钟为间隔对行进行分组。滚动窗口可以定义在事件时间（批处理、流处理）或处理时间（流处理）上。
+HOP(time_attr, interval, interval)
+定义一个跳跃的时间窗口（在 Table API 中称为滑动窗口）。滑动窗口有一个固定的持续时间（ 第二个 interval 参数 ）以及一个滑动的间隔（第一个 interval 参数 ）。若滑动间隔小于窗口的持续时间，滑动窗口则会出现重叠；因此，行将会被分配到多个窗口中。比如，一个大小为 15 分组的滑动窗口，其滑动间隔为 5 分钟，将会把每一行数据分配到 3 个 15 分钟的窗口中。滑动窗口可以定义在事件时间（批处理、流处理）或处理时间（流处理）上。
+SESSION(time_attr, interval)
+定义一个会话时间窗口。会话时间窗口没有一个固定的持续时间，但是它们的边界会根据 interval 所定义的不活跃时间所确定；即一个会话时间窗口在定义的间隔时间内没有时间出现，该窗口会被关闭。例如时间窗口的间隔时间是 30 分钟，当其不活跃的时间达到30分钟后，若观测到新的记录，则会启动一个新的会话时间窗口（否则该行数据会被添加到当前的窗口），且若在 30 分钟内没有观测到新纪录，这个窗口将会被关闭。会话时间窗口可以使用事件时间（批处理、流处理）或处理时间（流处理）。
+时间属性
+在流处理表中的 SQL 查询中，分组窗口函数的 time_attr 参数必须引用一个合法的时间属性，且该属性需要指定行的处理时间或事件时间。可参考 时间属性文档 以了解如何定义时间属性。
+对于批处理的 SQL 查询，分组窗口函数的 time_attr 参数必须是一个 TIMESTAMP 类型的属性。
+选择分组窗口的开始和结束时间戳
+可以使用以下辅助函数选择组窗口的开始和结束时间戳以及时间属性：
+辅助函数
+描述
+TUMBLE_START(time_attr, interval)HOP_START(time_attr, interval, interval)SESSION_START(time_attr, interval)
+返回相对应的滚动、滑动和会话窗口范围内的下界时间戳。
+TUMBLE_END(time_attr, interval)HOP_END(time_attr, interval, interval)SESSION_END(time_attr, interval)
+返回相对应的滚动、滑动和会话窗口范围以外的上界时间戳。
+注意： 范围以外的上界时间戳不可以 在随后基于时间的操作中，作为 行时间属性 使用，比如 interval join 以及 分组窗口或分组窗口上的聚合。
+TUMBLE_ROWTIME(time_attr, interval)HOP_ROWTIME(time_attr, interval, interval)SESSION_ROWTIME(time_attr, interval)
+返回相对应的滚动、滑动和会话窗口范围以内的上界时间戳。
+返回的是一个可用于后续需要基于时间的操作的时间属性（rowtime attribute），比如interval join 以及 分组窗口或分组窗口上的聚合。
+TUMBLE_PROCTIME(time_attr, interval)HOP_PROCTIME(time_attr, interval, interval)SESSION_PROCTIME(time_attr, interval)
+返回一个可用于后续需要基于时间的操作的 处理时间参数，比如interval join 以及 分组窗口或分组窗口上的聚合.
+注意： 辅助函数必须使用与 GROUP BY 子句中的分组窗口函数完全相同的参数来调用.
+以下的例子展示了如何在流处理表中指定使用分组窗口函数的 SQL 查询。
+
+
+Flink SQL 查询配置文档：
+https://ci.apache.org/projects/flink/flink-docs-release-1.11/zh/dev/table/streaming/query_configuration.html
+
+Flink SQL 自定义函数 文档：
+https://ci.apache.org/projects/flink/flink-docs-release-1.11/zh/dev/table/functions/udfs.html
+
+时态表（Temporal Tables）
+https://ci.apache.org/projects/flink/flink-docs-release-1.11/zh/dev/table/streaming/temporal_tables.html 
+
+连续查询的join操作：
+https://ci.apache.org/projects/flink/flink-docs-release-1.11/zh/dev/table/streaming/joins.html
+
